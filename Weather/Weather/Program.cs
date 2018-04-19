@@ -22,7 +22,7 @@ namespace Weather
             Console.OutputEncoding = Encoding.UTF8;
             var param = new Parameter();
             var pro = new Program();
-
+            
             try
             {
                 var twitterTokens = CoreTweet.Tokens.Create("Consumer Key", "Consumer Secret",
@@ -45,15 +45,19 @@ namespace Weather
                     string jsonNow = httpNow.Result;
                     JObject root = JObject.Parse(json);
                     JObject rootNow = JObject.Parse(jsonNow);
-                    string id = root["list"].ElementAt(3)["weather"].First()["id"].ToString();
+
+                    var id = from JObject x in root["list"]
+                             where x["dt_txt"].ToString() == $"{(DateTime.Today.ToString().Substring(0,10)).Replace("/","-")} 21:00:00"
+                             select x["weather"].First()["id"].ToString();
+                                
                     string idNow = rootNow["weather"].First()["id"].ToString();
-                    var tweMoji = pro.WeatherSelect(id.ToString());
+                    var tweMoji = pro.WeatherSelect(id.First());
                     var tweMojiNow = pro.WeatherSelect(idNow.ToString());
-                    Console.WriteLine(DateTime.Now + " | " + id + ":" + tweMoji + " | " + idNow + ":" + tweMojiNow);
+                    Console.WriteLine(DateTime.Now + " | " + id.First() + ":" + tweMoji + " | " + idNow + ":" + tweMojiNow);
 
                     twitterTokens.Account.UpdateProfile(tweMojiNow + param.Name + tweMoji, param.Url, param.Location, param.Bio);
 
-                    Thread.Sleep(1000 * 60 * 10);
+                    Thread.Sleep(1000 * 60 * 30);
                 }
             }
             catch (Exception ex)
