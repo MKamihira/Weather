@@ -39,15 +39,11 @@ namespace Weather
 
                 while (true)
                 {
-                    Task<string> httpUri = GetApiAsync(uri);
-                    Task<string> httpNow = GetApiAsync(now);
-                    string json = httpUri.Result;
-                    string jsonNow = httpNow.Result;
-                    JObject root = JObject.Parse(json);
-                    JObject rootNow = JObject.Parse(jsonNow);
+                    JObject root = JObject.Parse(GetApiAsync(uri).Result);
+                    JObject rootNow = JObject.Parse(GetApiAsync(now).Result);
 
                     var id = from JObject x in root["list"]
-                             where x["dt_txt"].ToString() == $"{(DateTime.Today.ToString().Substring(0,10)).Replace("/","-")} 21:00:00"
+                             where x["dt_txt"].ToString() == $"{DateTime.Today.YMD()} 21:00:00"
                              select x["weather"].First()["id"].ToString();
                                 
                     string idNow = rootNow["weather"].First()["id"].ToString();
@@ -65,6 +61,7 @@ namespace Weather
                 Console.WriteLine("Error : " + ex.Message);
             }
         }
+
 
         public static async Task<string> GetApiAsync(Uri uri)
         {
@@ -143,6 +140,17 @@ namespace Weather
         public static bool IsAny(this string self, params string[] values)
         {
             return values.Any(c => c == self);
+        }
+    }
+
+    public static partial class DateTimeExtensions
+    {
+        /// <summary>
+        /// 日付のみ返します
+        /// </summary>
+        public static string YMD(this DateTime date)
+        {
+            return date.ToString().Substring(0, 10).Replace("/", "-");
         }
     }
 }
